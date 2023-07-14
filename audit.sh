@@ -23,26 +23,19 @@ extracted_dir=$(tar -tzf "$package_name" | head -n 1 | awk -F/ '{print $1}')
 # Change into the extracted directory
 cd "$extracted_dir"
 
-echo "Inside auditbeat folder"
-
 # Configure cloud.id and cloud.auth if provided and localhost is not provided
 if [ -n "$cloud_params" ] && [ -z "$localhost" ]; then
-  # Uncomment the cloud.id and cloud.auth fields
-  sudo sed -i'.bak' "s|^#cloud.id:.*|cloud.id: \"$cloud_params\"|" auditbeat.yml
-  sudo sed -i'.bak' "s|^#cloud.auth:.*|cloud.auth: \"$cloud_params\"|" auditbeat.yml
 
   # Split cloud_params into cloud_id and cloud_auth using comma as separator
   IFS=',' read -ra cloud_array <<< "$cloud_params"
   cloud_id="${cloud_array[0]}"
   cloud_auth="${cloud_array[1]}"
 
-  # Update the values of cloud.id and cloud.auth
-  sudo sed -i".bak" "s|cloud.id:.*|cloud.id: \"$cloud_id\"|" auditbeat.yml
-  sudo sed -i".bak" "s|cloud.auth:.*|cloud.auth: \"$cloud_auth\"|" auditbeat.yml
+# Update the values of cloud.id and cloud.auth
+  sudo sed -i".bak" -e "s|^#cloud.id:.*|cloud.id: \"$cloud_id\"|" -e "s|^#cloud.auth:.*|cloud.auth: \"$cloud_auth\"|" auditbeat.yml
 else
   # Comment out the lines of cloud.id and cloud.auth if uncommented
-  sudo sed -i'.bak' 's/cloud.id:/#cloud.id:/' auditbeat.yml
-  sudo sed -i'.bak' 's/cloud.auth:/#cloud.auth:/' auditbeat.yml
+  sudo sed -i'.bak' -e 's/cloud.id:/#cloud.id:/' -e 's/cloud.auth:/#cloud.auth:/' auditbeat.yml
 fi
 
 # Uncomment line 82 if localhost is specified as parameter
@@ -61,5 +54,3 @@ sudo ./auditbeat setup
 
 # Start Auditbeat as a background process
 sudo ./auditbeat -e
-
-
